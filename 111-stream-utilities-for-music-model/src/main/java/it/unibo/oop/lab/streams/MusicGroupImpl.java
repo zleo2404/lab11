@@ -6,7 +6,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalDouble;
 import java.util.Set;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -33,7 +32,7 @@ public final class MusicGroupImpl implements MusicGroup {
 
     @Override
     public Stream<String> orderedSongNames() {
-        return this.songs.stream().sorted( (a,b) -> a.getSongName().compareTo(b.getSongName())).map( a -> a.getSongName());
+        return this.songs.stream().sorted((a, b) -> a.getSongName().compareTo(b.getSongName())).map(Song::getSongName);
     }
 
     @Override
@@ -43,29 +42,33 @@ public final class MusicGroupImpl implements MusicGroup {
 
     @Override
     public Stream<String> albumInYear(final int year) {
-        return this.albums.keySet().stream().filter( t -> albums.get(t)==year );
+        return this.albums.keySet().stream().filter(t -> albums.get(t) == year);
     }
 
     @Override
     public int countSongs(final String albumName) {
-        return (int)this.songs.stream().filter(t -> t.getAlbumName().isPresent() && t.getAlbumName().get().equals(albumName)).count();
+        return (int) this.songs.stream()
+            .filter(t -> t.getAlbumName().isPresent() && t.getAlbumName().get().equals(albumName))
+            .count();
     }
 
     @Override
     public int countSongsInNoAlbum() {
-        return (int)this.songs.stream().filter(t -> t.getAlbumName().isEmpty()).count();
+        return (int) this.songs.stream().filter(t -> t.getAlbumName().isEmpty()).count();
     }
 
     @Override
     public OptionalDouble averageDurationOfSongs(final String albumName) {
-        return OptionalDouble.of((this.songs.stream().filter(t -> t.getAlbumName().isPresent() && t.getAlbumName().get().equals(albumName)).mapToDouble( t-> t.getDuration()).sum()/countSongs(albumName)));
+        return OptionalDouble.of(this.songs.stream().filter(t -> t.getAlbumName().isPresent() 
+            && t.getAlbumName().get().equals(albumName))
+            .mapToDouble(Song::getDuration).sum() / countSongs(albumName));
     }
 
     @Override
     public Optional<String> longestSong() {
         return Optional.of(this.songs
             .stream()
-            .max( (a,b) -> Double.compare(a.getDuration(), b.getDuration()))
+            .max((a, b) -> Double.compare(a.getDuration(), b.getDuration()))
             .get()
             .getSongName()
         );
@@ -74,9 +77,9 @@ public final class MusicGroupImpl implements MusicGroup {
     @Override
     public Optional<String> longestAlbum() {
         return this.songs.stream()
-            .filter(t-> t.getAlbumName().isPresent())
-            .collect(Collectors.groupingBy(Song::getAlbumName,Collectors.summingDouble(Song::getDuration))).entrySet()
-            .stream().max( (a,b) -> Double.compare(a.getValue(), b.getValue()))
+            .filter(t -> t.getAlbumName().isPresent())
+            .collect(Collectors.groupingBy(Song::getAlbumName, Collectors.summingDouble(Song::getDuration))).entrySet()
+            .stream().max((a, b) -> Double.compare(a.getValue(), b.getValue()))
             .get().getKey();
     }
 
