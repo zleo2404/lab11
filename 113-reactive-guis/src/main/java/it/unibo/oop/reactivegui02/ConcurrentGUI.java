@@ -21,6 +21,8 @@ public final class ConcurrentGUI extends JFrame {
     private static final double HEIGHT_PERC = 0.1;
     private final JLabel display = new JLabel();
     private final JButton stop = new JButton("stop");
+    private final JButton up = new JButton("up");
+    private final JButton down = new JButton("down");
 
     /**
      * Builds a new CGUI.
@@ -32,6 +34,8 @@ public final class ConcurrentGUI extends JFrame {
         this.setDefaultCloseOperation(EXIT_ON_CLOSE);
         final JPanel panel = new JPanel();
         panel.add(display);
+        panel.add(up);
+        panel.add(down);
         panel.add(stop);
         this.getContentPane().add(panel);
         this.setVisible(true);
@@ -45,7 +49,13 @@ public final class ConcurrentGUI extends JFrame {
         /*
          * Register a listener that stops it
          */
-        stop.addActionListener((e) -> agent.stopCounting());
+        up.addActionListener((e) -> agent.up());
+        down.addActionListener((e) -> agent.down());
+        stop.addActionListener((e) -> {
+            agent.stopCounting();
+            up.setEnabled(false);
+            down.setEnabled(false);
+        });
     }
 
     /*
@@ -64,16 +74,23 @@ public final class ConcurrentGUI extends JFrame {
          * 
          */
         private volatile boolean stop;
+        private volatile boolean top=true;
         private int counter;
 
         @Override
         public void run() {
             while (!this.stop) {
                 try {
+                    
                     // The EDT doesn't access `counter` anymore, it doesn't need to be volatile 
                     final var nextText = Integer.toString(this.counter);
                     SwingUtilities.invokeAndWait(() -> ConcurrentGUI.this.display.setText(nextText));
-                    this.counter++;
+                    if(top){
+                        this.counter++;
+                    }else{
+                        this.counter--;
+                    }
+                    
                     Thread.sleep(100);
                 } catch (InvocationTargetException | InterruptedException ex) {
                     /*
@@ -90,7 +107,18 @@ public final class ConcurrentGUI extends JFrame {
          */
         public void stopCounting() {
             this.stop = true;
+            down.setEnabled(false);
+            up.setEnabled(false);
         }
+
+        public void up() {
+            this.top = true;
+        }
+
+        public void down(){
+            this.top=false;
+        }
+
     }
 
 }
