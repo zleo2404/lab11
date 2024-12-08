@@ -53,8 +53,6 @@ public final class ConcurrentGUI extends JFrame {
         down.addActionListener((e) -> agent.down());
         stop.addActionListener((e) -> {
             agent.stopCounting();
-            up.setEnabled(false);
-            down.setEnabled(false);
         });
     }
 
